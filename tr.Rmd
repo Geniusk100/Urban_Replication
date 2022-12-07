@@ -1,0 +1,65 @@
+---
+title: "urban"
+author: "Kemar Gordon"
+date: "12/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+library(readr)
+```
+
+```{r}
+AllParcels2012 <- read_csv("2012dataclean/AllParcels2012.txt")
+AllParcels2012 <- AllParcels2012 %>% select(WARD, PARCEL, PID_LONG, SHAPE_area, point_x, point_y, fire_dist) 
+  df <- data.frame(AllParcels2012)%>% #Creates a data frame#
+  distinct()%>%# Removes duplicated values#
+  rename_all(tolower) %>%
+  mutate(pid_long=as.numeric(pid_long))%>%
+  group_by(ward, parcel, pid_long) %>%
+  summarize(fire_dist = mean(fire_dist), shape_area = mean(shape_area), point_x =   mean(point_x), point_y = mean(point_y))
+  write.csv(df, "C:/Users/K3rgo/OneDrive/Desktop/New folder (2)/Urban/New folder/data.csv", row.names=FALSE)#Save files as CSV
+  
+```
+```{r}
+SampleParcels <- read_csv("SampleParcels.csv")
+df_2 <- data.frame(SampleParcels)%>%
+  rename_all(tolower)%>%
+  group_by(ward, parcel, pid_long)%>%  
+  summarize(samplearea = mean(samplearea))%>%
+  mutate(pid_long=as.numeric(pid_long))
+```
+```{r}
+df_3 <- left_join(df, df_2,by = c("ward", "parcel", "pid_long")) %>%
+  mutate (sample_frac= samplearea/shape_area) %>% 
+  mutate(sample_frac = ifelse(samplearea/shape_area > 1, 1 ,0))
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,200 @@
+---
+title: "urban"
+author: "Kemar Gordon"
+date: "12/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+library(readr)
+```
+##Cleaning Code
+```{r}
+AllParcels2012 <- read_csv("2012dataclean/AllParcels2012.txt") 
+AllParcels2012 <- AllParcels2012 %>% select(WARD, PARCEL, PID_LONG, SHAPE_area, point_x, point_y, fire_dist) 
+  df <- data.frame(AllParcels2012)%>% #Creates a data frame#
+  distinct()%>%# Removes duplicated values#
+  rename_all(tolower) %>%
+  mutate(pid_long=as.numeric(pid_long))%>%
+  group_by(ward, parcel, pid_long) %>%
+  summarize(fire_dist = mean(fire_dist), shape_area = mean(shape_area), point_x = mean(point_x), point_y = mean(point_y))
+
+  
+```
+```{r}
+SampleParcels <- read_csv("SampleParcels.csv")
+df_2 <- data.frame(SampleParcels)%>%
+  rename_all(tolower)%>%
+  group_by(ward, parcel, pid_long)%>%  
+  summarize(samplearea = mean(samplearea))%>%
+  mutate(pid_long=as.numeric(pid_long))
+```
+```{r}
+df_3 <- right_join(df_2, df,by = c("ward", "parcel", "pid_long")) %>%
+  mutate (sample_frac= samplearea/shape_area) %>% 
+  mutate(sample_frac = ifelse(samplearea/shape_area > 1 & !is.na(samplearea/shape_area) , 1 ,sample_frac))%>%
+  mutate(sample_frac = ifelse(is.na(samplearea/shape_area) , 0 ,sample_frac))
+```
+```{r}
+BurnedParcels <- read_csv("2012dataclean/BurnedParcels.txt")
+df_4 <- data.frame(BurnedParcels)%>%
+  rename_all(tolower)%>%
+  group_by(ward, parcel, pid_long)%>%
+  summarize(burnedarea = mean(burnedarea)) %>%
+  mutate(pid_long=as.numeric(pid_long))
+```
+```{r}
+df_5 <- right_join(df_4, df_3,by = c("ward", "parcel", "pid_long"))%>%
+  mutate (burned_frac= burnedarea/shape_area) %>% 
+  mutate(burned_frac = ifelse(is.na(burned_frac) , 0 ,burned_frac))
+```
+```{r}
+ConstructionParcels <- read_csv("2012dataclean/ConstructionParcels.txt")
+df_6 <- data.frame(ConstructionParcels)%>%
+  rename_all(tolower)%>%
+  group_by(ward, parcel, pid_long)%>%
+  summarize(constarea = mean(constarea)) %>%
+  mutate(pid_long=as.numeric(pid_long))
+```
+```{r}
+df_7 <- right_join(df_6, df_5,by = c("ward", "parcel", "pid_long"))%>%
+  mutate (const_frac= constarea/shape_area)%>%
+  mutate(const_frac = ifelse(is.na(const_frac) , 0 ,const_frac))
+```
+```{r}
+SampleParcelCentroids <- read_csv("2012dataclean/SampleParcelCentroids.txt")%>%
+  rename_all(tolower)%>%
+  select(bad_points, block_id, wharf, dist_burne, burned, s_point_y, s_point_x, ward, parcel, pid_long)
+```
+```{r}
+df_8 <- data.frame(SampleParcelCentroids)%>%
+  mutate(burnedarea = 0)%>%
+  group_by(ward, parcel, pid_long)%>%
+  summarize(s_point_x = mean(s_point_x),s_point_y = mean(s_point_y),burned = mean(burned),dist_burne = mean(dist_burne),wharf=mean(wharf),block_id=mean(block_id), bad_points=mean(bad_points))%>%
+  mutate(pid_long = as.numeric(pid_long))
+```
+```{r}
+df_9 <- right_join(df_8, df_7,by = c("ward", "parcel", "pid_long"))%>%
+  filter(!(pid_long == " ." ))
+```
+```{r}
+DATA2012_FULL <- read_csv("2012dataclean/DATA2012-FULL.txt")
+DATA2012_FULL <- DATA2012_FULL %>% select(-(R_BLDG_STYL:U_FPLACE))
+DATA2012_FULL <- DATA2012_FULL %>% select(-(MAIL_ADDRESS:MAIL_ZIPCODE))
+df_10 <- data.frame(DATA2012_FULL) %>% 
+  rename_all(tolower)%>%
+  mutate(st_num = str_remove_all(st_num," "))%>%
+  mutate(st_name = str_remove_all(st_name," "))%>%
+  mutate(st_name_SUF = str_remove_all(st_name_suf," "))%>%
+  mutate(st_num = str_replace_all(st_num,"_ ", " - "))%>%
+  mutate(st_num = str_replace_all(st_num," _"," - "))%>%
+  group_by(pid, cm_id, st_num, st_name, st_name_suf, zipcode) %>%
+  summarize(owner = first(owner),av_land = first(av_land),av_bldg = first(av_bldg), av_total = first(av_total), gross_tax = first(gross_tax), land_sf = first(land_sf),lu = first(lu), yr_built=min(yr_built))%>%
+  mutate(cm_id =as.numeric(cm_id))
+
+df_10$originalorder <- 1:nrow(df_10)
+```
+```{r}
+df_11 <-df_10 %>%  
+  mutate(pid_long = as.numeric(pid))%>%
+  mutate(strpid = as.character(pid_long))%>%
+  mutate(address =paste(st_num, st_name, st_name_suf, as.character(zipcode)))%>%
+  mutate(condo_id= 0) %>%
+  mutate(cm_id = ifelse(!(is.na(cm_id)), pid_long,cm_id))%>%
+  group_by(address, condo_id)%>%
+  mutate(condo_temp=ifelse(n_index == 1, 1,condo_id)) %>%
+  group_by(address)%>%
+  mutate(condo_count=sum(condo_temp))
+```
+```{r}
+
+df_11 <-df_10 %>%
+  mutate(pid_long = as.numeric(pid))%>%
+  mutate(strpid = as.character(pid_long))%>%
+  mutate(address =paste(st_num, st_name, st_name_suf, as.character(zipcode)))%>%
+  mutate(condo_id= 0) %>%
+  mutate(cm_id = ifelse(!(is.na(cm_id)), pid_long,cm_id))%>%
+  group_by(address, condo_id)%>%
+  mutate(condo_temp=ifelse(originalorder == 1, 1,condo_id)) %>%
+  group_by(address)%>%
+  mutate(condo_count=sum(condo_temp))%>%
+  mutate(pid_long = ifelse(pid_long == 0302953018, 302953010,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 305358202, 305358000 ,pid_long ))%>%
+  mutate( pid_long = ifelse( pid_long == 305424300 | pid_long == 305424030,305424020, pid_long ))%>%
+  mutate( pid_long = ifelse( pid_long == 303041300 | pid_long == 303041010,303041000, pid_long ))%>%
+  mutate( pid_long = ifelse( pid_long == 304304402 | pid_long == 304304401,304304400, pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 30511201 |pid_long == 305112012,305112010, pid_long ))%>%
+  mutate( pid_long = ifelse( pid_long == 304826012 | pid_long == 304826014, 304826010, pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 500043011, 500043010,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 304133001, 304133000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long ==  301674001, 301674000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 500001001, 500001000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long== 305651001, 305651000,pid_long ))%>%
+  mutate( pid_long= ifelse(pid_long== 500045001, 500045000,pid_long))%>%
+  mutate( pid_long = ifelse(pid_long == 304500200, 304500000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 304890100, 304890000,pid_long))%>%
+  mutate( pid_long = ifelse(pid_long == 304692051, 304692050,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 305380001, 305380000,pid_long))%>%
+  mutate( pid_long = ifelse(pid_long == 304893001, 304893000,pid_long))%>%
+  mutate( pid_long = ifelse(pid_long ==  302862001, 302862000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 304788001, 304788000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 304102001, 304102000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 304605001, 304605000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long== 304692050, 304692000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 304821001, 304821000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 304841001, 304841000 ,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 304860001, 304860000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 305106001, 305106000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 305107001, 305107000 ,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 305777001, 305777000,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 302952014, 302952010,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long== 303028500, 303028300,pid_long ))%>%
+  mutate( pid_long = ifelse(pid_long == 305107001, 305107000 ,pid_long ))%>%
+  mutate(pid_long = ifelse(pid_long == 303740000, 303747000,pid_long ))%>%
+  mutate(pid_long = ifelse( pid_long == 304870400 | pid_long == 304870020, 304870010, pid_long ))%>%
+  mutate(cm_id = ifelse(cm_id == 303740000, 303747000,cm_id ))%>%
+  mutate(pid_long = ifelse( pid_long == 304832420 | pid_long == 304832400| pid_long == 304832020, 304832010, pid_long ))%>%
+  mutate(pid_long = ifelse( substr(strpid, 1, 6) == "305378" | substr(strpid, 1, 6) ==  "305379", 305379035, pid_long ))%>%
+  mutate(pid_long = ifelse( substr(strpid, -1, 1) == "1" & st_name == "HARRISON", pid_long-1, pid_long ))%>%
+  select(-strpid)
+```
+```{r}
+mutate(addressfillin = 0)
+mutate(as.numeric(fillinpid) = .)
+mutate(as.numeric(pid_long_match)=ifelse(parcelmerge==3,pid_long,0 ))%>%
+  
+  df_19 <- left_join(df_11, df_9,by = "pid_long")%>% 
+  select(-s_point_x:-const_frac)%>%
+  group_by(address)%>%
+  mutate(temp=mean(shape_area)) %>%
+  mutate(shape_area=ifelse(shape_area=="0", temp,shape_area))
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
