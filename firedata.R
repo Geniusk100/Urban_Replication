@@ -49,15 +49,10 @@ MP05<-rbind.fill(MP04,MP03)%>%
   mutate(page = str_replace_all(page," _"," - "))
  
   
-df_01 <- right_join(MP05, MP02,by = c("database_line"))
- 
-
-df_01%>%
-  filter(!((total=="1" & line==" .") & year%in%c("1869","1871") & merge=="1" & n=="2") )%>%
+df_01 <- right_join(MP05, MP02,by = c("database_line","year"))%>%
+  filter(!((total=="1" & line==" .") & year%in%c("1869","1871") ) )%>%
   filter(!(database_line%in%c("100770","100775") & year%in%c("1869","1871")) )%>%
   arrange( year, ward, book, page,line)%>%
-#by year ward book page line:  gen n = [_N]
-  select(-n, -merge)%>%
   filter(!(ward=="5" & book=="2" & year=="1867" & page=="200" & line>="2") )%>%
   filter(!(ward=="5" & book=="2" & year=="1867" & page>="201" & page<="204") )%>%
   filter(!(ward=="12" & book=="2" & year=="1882" & page>="417" & page<="421") )%>%
@@ -73,8 +68,9 @@ df_01%>%
 
  
   mutate(map_id = ifelse( map_id == na | year == 1869| year == 1871, database_line_6971,map_id ))
-  #gen temp_plot_unit = real(plotsize) ~= .
-  #bys year map_id : egen has_plot_unit = max(temp_plot_unit)
+  #mutate( temp_plot_unit = ifelse(as.numeric(plotsize) != ".", as.numeric(plotsize),temp_plot_unit))
+  #groupby(year map_id)
+  #mutate(has_plot_unit = max(temp_plot_unit))
   
 #Total 
 mutate(exempt = "")
@@ -86,9 +82,8 @@ select(-total_value)
 
 #Land
 mutate(value_land = tolowe(value_land))
-#replace exempt = exempt + "Land " if value_land == "exempt"
+#mutate(exempt= ifelse( value_land == "exempt", paste(exempt + "Land " ),exempt)
 mutate(value_land_num = as.numeric(value_land))
-#tab value_land if value_land_num==.
 select(-value_land)
 rename(value_land = value_land_num)
   
@@ -98,31 +93,58 @@ rename(value_land = value_land_num)
 mutate(value_building = tolower(value_building))
 mutate(exempt=ifelse(value_building == "exempt",(exempt + "Building "),0 ))
 mutate(value_building_num = as.numeric(value_building))
-#tab value_building if value_building_num==.
 select(-value_building)
 rename(value_building=value_building_num)
 
 muatate(cityandchurch=0)
-#replace cityandchurch=1 if regexm(trim(lower(owner)), "city of boston") 
-#replace cityandchurch=1 if regexm(trim(lower(owner)), "church") 
-#replace cityandchurch=1 if regexm(trim(lower(owner)), "chapel") 
-#replace cityandchurch=1 if regexm(trim(lower(owner)), "school") 
-#replace cityandchurch=1 if regexm(trim(lower(owner)), "christian society") 
-#replace cityandchurch=1 if owner == "United States" | owner == "United States of America" // the post office and customs house
-#replace cityandchurch=1 if owner == "Commonwealth of Massachusetts" // the post office
+#mutate(cityandchurch=ifelse( paste(trim(tolower(owner)), "city of boston"),1,0))
+#mutate(cityandchurch= ifelse( paste(trim(tolower(owner)), "church"),1,0 ))
+#mutate(cityandchurch= ifelse( paste(trim(tolower(owner)), "chapel"),1,0 ))
+#mutate(cityandchurch=1 ifelse( paste(trim(tolower(owner)), "school"),1,0))
+#mutate(cityandchurch=1 ifelse( paste(trim(lower(owner)), "christian society"),1,0)) 
+#mutate(cityandchurch=ifelse( owner == "United States" | owner == "United States of America",1,0)) // the post office and customs house
+#mutate(cityandchurch=ifelse( owner == "Commonwealth of Massachusetts",1,0)) // the post office
 filter(!(cityandchurch=="1" ) )
- select(-cityandchurch)
+select(-cityandchurch)
+
+
+#Adjust missing/zero
+mutate( value_building = ifelse( value_total == value_land==" ." & value_building == " ." & value_total !=" .",0,value_building))
+mutate(value_building =  ifelse( value_building == . & value_total !=. & value_land !=.,value_total - value_land, value_building))
+mutate( value_land = ifelse( value_total == value_building & value_land == "." & value_total !=.,0,value_land ))
+mutate( value_land =  ifelse( value_land == " ." & value_total !=" ." & value_building !=.,value_total - value_building,value_land))
+
+
+
+#Clean category
+mutate(category = trim(tolower(category)))
+#mutate category_residential = ifelse((category=="0"|category=="1"|category=="a"))
+#mutate ( category_commercial =ifelse( (category_residential==0&category!=""))
+#mutate(category_missing = ifelse((category_residential==0&category_commercial==0))
+#mutate(category_alien = ifelse(lower(category) == "a"))
+select(-category)
 
 
 
 
+#Clean capital value data
+mutate(capital = tolower(capital))
+mutate( capital = ifelse( capital == "no capital" | capital == "-" | capital == "--" | capital == "(see 11)" |capital == "(see 9)" | capital == "nothing" | capital == "sold out" | capital == "failed" | capital == "nix"| capital == "oath nothing","0", capital))
+mutate( exempt =ifelse( capital == "exempt" | database_line==10993, "Capital", exempt)) #made a mistake cleaning before
+mutate( capital = ifelse( exempt == "Capital","",capital))
+mutate( res_cap =  ifelse(category_residentia,capital,res_cap))
+mutate(capital=as.numeric(capital))
+
+#Clean square footage data
+mutate(plotsize=as.numeric(plotsize))
+mutate( occupant_unit = 1)
+mutate(building_unit = ifelse( value_building !=" .",value_building,building_unit))
+mutate( plot_unit = ifelse(plotsize!=" .",plotsize,plot_unit))
+filter(!((total==1) ))
+select(-total)
+arrange( year, map_id)
 
 
-
-
-X1871_Point_File_Database$book <-as.numeric(X1871_Point_File_Database$book)
-X1871_Point_File_Database$page <-as.numeric(X1871_Point_File_Database$page)
-X1871_Point_File_Database$line <-as.numeric(X1871_Point_File_Database$line)
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

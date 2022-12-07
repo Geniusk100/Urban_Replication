@@ -1,4 +1,6 @@
 install.packages("stargazer")
+install.packages("olsrr")
+
 rm(list=ls())
 library(tidyverse)
 library(lmtest)
@@ -6,16 +8,39 @@ library(sandwich)
 library(haven)
 library(ggplot2)
 library(stargazer)
+library(olsrr)
 FireWorking <- read_dta("FAD/FireWorking.dta")
-rdf1<-FireWorking%>%
+ close <-1338.965
+
+ 
+ 
+ 
+ 
+ 
+ 
+ rdf1<-FireWorking%>%
   rename_all(tolower)%>%
+  mutate(sample0=1)%>%
+  mutate(sample1=ifelse(burned == 1 | distance < close,1,0))%>%
+  mutate(sample2=ifelse(burned == 1 | distance >= close,1,0))%>%
   mutate(year_1872=year )%>%
-  mutate(year_1872=1872)%>%
+  mutate(year_1872=ifelse(year==1872,1,0))%>%
   mutate(burned_1872 = year_1872*burned)
+ r<-0:2  
+ rdf2<-filter(rdf1,(sample1==1))
+ rdf21<-filter(rdf1,(sample1==0))
+ rdf3<-filter(rdf1,(sample2==1))
+ rdf31<-filter(rdf1,(sample2==0))
+ Cenj<-list()
+sumstatvars <-list("land_ft","building_ft")
+
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 reg01 <- lm(lnvalue_land_ft  ~    burned_1867  + burned_1869+ burned_1871+year_1869+ year_1871 +year_1872
             
-            , data=rdf1)  
+            , data=rdf1) 
+reg01sw<-ols_step_forward_aic(reg01,penter=0.05,details = F)
+reg01sw1<-ols_step_backward_aic(reg01,prem=0.05,details = T)
+plot(reg01sw)
 summary(reg01)
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -24,6 +49,17 @@ reg02 <- lm(lnvalue_land_plot  ~   burned_1869  + burned_1871+ burned_1872+ year
             + lnland_ft_blk_1867_1871   +   lnland_ft_n_1867_1872  + lnland_ft_blk_1867_1872 
             , data=rdf1)  
 summary(reg02)
+
+reg021 <- lm(lnvalue_land_plot  ~   burned_1869  + burned_1871+ burned_1872+ year_1871 +year_1872
+            +    lnland_ft_n_1867_1869   + lnland_ft_blk_1867_1869  +  lnland_ft_n_1867_1871 
+            + lnland_ft_blk_1867_1871   +   lnland_ft_n_1867_1872  + lnland_ft_blk_1867_1872 
+            , data=rdf2)  
+summary(reg021)
+reg021 <- lm(lnvalue_land_plot  ~   burned_1869  + burned_1871+ burned_1872+ year_1871 +year_1872
+             +    lnland_ft_n_1867_1869   + lnland_ft_blk_1867_1869  +  lnland_ft_n_1867_1871 
+             + lnland_ft_blk_1867_1871   +   lnland_ft_n_1867_1872  + lnland_ft_blk_1867_1872 
+             , data=rdf3)  
+summary(reg021)
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

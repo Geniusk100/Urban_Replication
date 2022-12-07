@@ -2,66 +2,73 @@ rm(list=ls())
 library(tidyverse)
 library(readr)
 WaterPipesBurned <- read_csv("Burned Pipes/WaterPipesBurned.csv")%>%
+  rename_all(tolower) %>%
   mutate(burned=1)
-library(readr)
+
 WaterPipesUnburned <- read_csv("Burned Pipes/WaterPipesUnburned.csv")%>%
+  rename_all(tolower) %>%
   mutate(burned=0)
+rb1<-rbind(WaterPipesUnburned,WaterPipesBurned )
+#%%%%%%%%%%%%%%1853%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 library(readr)
 Pipes1853Burned <- read_csv("Burned Pipes/Pipes1853Burned.csv")%>%
+  rename_all(tolower) %>%
   mutate(burned=1)
-library(readr)
+
 Pipes1853UnBurned <- read_csv("Burned Pipes/Pipes1853UnBurned.csv")%>%
-  mutate(burned=1)%>%
-  mutate(OBJECTID = (oid_save+1)) %>%
-  select(DistPipeW, OBJECTID, length, burned)
-Wp_data <- left_join(WaterPipesBurned, Pipes1853UnBurned, by = c("OBJECTID", "burned"))%>%
-  select(-Shape_Leng)%>%
-  mutate(WaterDate=1852)%>%
-  mutate(W_Pipe_in= DistPipeW)%>%
-  mutate(W_comments =paste(as.character(WaterDate),"/", as.character(W_Pipe_in),"/", as.character(W_PipeLeng), ";"))
+  rename_all(tolower) %>%
+  mutate(burned=0)
 
-Wp2_data <- left_join(WaterPipesUnburned, Pipes1853UnBurned, by = c("OBJECTID", "burned"))%>%
-  select(-Shape_Leng)%>%
-  mutate(WaterDate=1852)%>%
-  mutate(W_Pipe_in= DistPipeW)%>%
-  mutate(W_comments =paste(as.character(WaterDate),"/", as.character(W_Pipe_in),"/", as.character(W_PipeLeng), ";"))
+
+rb2<-rbind(Pipes1853UnBurned,Pipes1853Burned )%>%
+  mutate(objectid = (oid_save+1)) %>%
+  select(distpipew, mainpipew, objectid, length, burned)
+Wp_data <- right_join(rb2, rb1, by = c("objectid", "burned"))%>%
+  select(-shape_leng)%>%
+  mutate(waterdate=as.character(waterdate))%>%
+  mutate(w_pipe_in=as.character(w_pipe_in))%>%
+  mutate(w_pipeleng=as.character(w_pipeleng))%>%
+  mutate(w_comments = paste(waterdate,"/", w_pipe_in,"/", w_pipeleng, ";"))%>%
+  mutate(waterdate=as.numeric(waterdate))%>%
+  mutate(w_pipe_in=as.numeric(w_pipe_in))%>%
+  mutate(w_pipeleng=as.numeric(w_pipeleng))%>%
+  mutate(waterdate=1852)%>%
+  mutate(w_pipe_in = distpipew)%>%
+  mutate(w_pipe_in= ifelse(w_pipe_in==0," .",w_pipe_in))
+                        
+#%%%%%%%%%%%%%%1853%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 library(readr)
+
 DistToFire_Burned <- read_csv("Burned Pipes/DistToFire_Burned.csv")%>%
-  select(-OBJECTID)%>%
-  rename(OBJECTID=oid_save)%>%
-  mutate(OBJECTID=OBJECTID+1)%>%
-  select(OBJECTID, NEAR_DIST, Shape_Length)%>%
-  rename(dist_sl=Shape_Length)%>%
+  rename_all(tolower) %>%
+  select(-objectid)%>%
+  rename(objectid=oid_save)%>%
+  mutate(objectid=objectid+1)%>%
+  select(objectid, near_dist, shape_length)%>%
+  rename(dist_sl=shape_length)%>%
   mutate(burned=1)
-Wp3_data <- left_join(Wp_data, DistToFire_Burned, by = c("OBJECTID", "burned"))
+
+Wp3_data <- right_join(DistToFire_Burned,Wp_data, by = c("objectid", "burned"))
 
 library(readr)
-DistToFire_Unburned <- read_csv("Burned Pipes/DistToFire_Unburned.csv")
-View(DistToFire_Unburned)
-
-View(DistToFire_Burned)
-
-
-
-
-
-
-
-
+DistToFire_Unburned <- read_csv("Burned Pipes/DistToFire_Unburned.csv")%>%
+  rename_all(tolower) %>%
+  select(-objectid)%>%
+  rename(objectid=oid_save)%>%
+  rename(near_distu=near_dist)%>%
+  mutate(objectid=objectid+1)%>%
+  select(objectid, near_distu, shape_length)%>%
+  rename(dist_sl=shape_length)%>%
+  mutate(burned=0)
+Wp4_data <- full_join(DistToFire_Unburned,Wp3_data, by = c("objectid", "burned"))
 
 
 
-Wp_data$WaterDate <- as.numeric(Wp_data$WaterDate)
-Wp_data$W_Pipe_in <- as.numeric(Wp_data$W_Pipe_in)
-Wp_data$W_PipeLeng <- as.numeric(Wp_data$W_PipeLeng)
-
-
-View(Pipes1853UnBurned)
 
 
 
-View(Pipes1853Burned)
-  
-View(WaterPipesUnburned)
-View(WaterPipesBurned)
+
+
+
