@@ -1,0 +1,759 @@
+---
+title: "Untitled"
+author: "Kemar Gordon"
+date: "12/7/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+
+```
+```{r, message= FALSE, warning= FALSE}
+library(tidyverse)
+library(abind)
+library(lmtest)
+library(sandwich)
+library(haven)
+library(ggplot2)
+library(stargazer)
+library(olsrr)
+set.seed(1234)
+FireWorking <- read_dta("FAD/FireWorking.dta")
+ close <-1338.965
+
+ 
+ rdf1<-FireWorking%>%
+  rename_all(tolower)%>%
+  mutate(sample0=1)%>%
+  mutate(sample1=ifelse(burned == 1 | distance < close,1,0))%>%
+  mutate(sample2=ifelse(burned == 1 | distance >= close,1,0))%>%
+  mutate(year_1872=year )%>%
+  mutate(year_1872=ifelse(year==1872,1,0))%>%
+  mutate(burned_1872 = year_1872*burned)
+ 
+ rdf13<- filter(rdf1,(year == 1872 ) & sample0==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ regcbd <- lm(lnvalue_land_ft  ~    dist_to_cbd, data=rdf13)
+ summary( regcbd)
+ rdf12<- filter(rdf1,(year == 1872 ) & sample1==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ rdf11<- filter(rdf1,(year == 1872 ) & sample2==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ 
+ 
+ rdf10<- filter(rdf1,(year == 1872 | year == 1871 ) & sample0==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ rdf9<- filter(rdf1,(year == 1872 | year == 1871 ) & sample1==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ rdf8<- filter(rdf1,(year == 1872 | year == 1871 ) & sample2==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ rdf7<- filter(rdf1,(year == 1872 | year == 1871 | year == 1869 ) & sample0==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ 
+ rdf6<- filter(rdf1,(year == 1872 | year == 1871 | year == 1869 ) & sample1==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ rdf5<- filter(rdf1,(year == 1872 | year == 1871 | year == 1869  ) & sample2==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ 
+ 
+ rdf4<- filter(rdf1,(year == 1872 | year == 1871 | year == 1869 | year == 1867 ) & sample0==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ rdf3<- filter(rdf1,(year == 1872 | year == 1871 | year == 1869 | year == 1867 ) & sample1==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+ 
+ 
+ rdf2<- filter(rdf1,(year == 1872 | year == 1871 | year == 1869 | year == 1867 ) & sample2==1)%>%
+   mutate(lnvalue_land_ft=lnvalue_land_ft*sqrt(plotsize))%>%
+   mutate(lnvalue_building_ft=lnvalue_building_ft*sqrt(plotsize))%>%
+   mutate(burned_1867=burned_1867*sqrt(plotsize))%>%
+   mutate(burned_1869=burned_1869*sqrt(plotsize))%>%
+   mutate(burned_1871=burned_1871*sqrt(plotsize))%>%
+   mutate(burned_1872=burned_1872*sqrt(plotsize))%>%
+   mutate(year_1869=year_1869*sqrt(plotsize))%>%
+   mutate(year_1871=year_1871*sqrt(plotsize))%>%
+   mutate(year_1872=year_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1869 =lnland_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1869=lnland_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1871=lnland_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1871=lnland_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1867_1872=lnland_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1867_1872 =lnland_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1869 =lnbuilding_ft_n_1867_1869 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1869=lnbuilding_ft_blk_1867_1869*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1871=lnbuilding_ft_n_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1871=lnbuilding_ft_blk_1867_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1867_1872=lnbuilding_ft_n_1867_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1867_1872 =lnbuilding_ft_blk_1867_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1872 =lnland_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1869_1871=lnland_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1872 =lnland_ft_blk_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1869_1871=lnland_ft_blk_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1872 =lnbuilding_ft_n_1869_1872 *sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1869_1871=lnbuilding_ft_n_1869_1871*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1872=lnbuilding_ft_blk_1869_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1869_1871 =lnbuilding_ft_blk_1869_1871 *sqrt(plotsize))%>%
+   mutate(lnland_ft_n_1871_1872 =lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_n_1871_1872=lnbuilding_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnland_ft_blk_1871_1872=lnland_ft_n_1871_1872*sqrt(plotsize))%>%
+   mutate(lnbuilding_ft_blk_1871_1872 =lnbuilding_ft_blk_1871_1872*sqrt(plotsize))
+ 
+
+
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> land_ft    >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg01 <- lm(lnvalue_land_ft  ~    burned_1867  + burned_1869+ burned_1871+burned_1872+year_1869+ year_1871 +year_1872, data=rdf4) 
+reg01_clustered <-coeftest(reg01,vcov. =vcovCL,type="HC1",cluster = ~block_id)
+summary(reg01)
+summary(reg01_clustered)
+reg02 <- lm(lnvalue_land_ft  ~    burned_1867  + burned_1869+ burned_1871+burned_1872+year_1869+ year_1871 +year_1872, data=rdf3) 
+summary(reg02)
+reg03 <- lm(lnvalue_land_ft  ~    burned_1867  + burned_1869+ burned_1871+burned_1872+year_1869+ year_1871 +year_1872, data=rdf2) 
+summary(reg03)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  land_ft >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg04 <- lm(lnvalue_land_ft  ~   burned_1869  + burned_1871+ burned_1872+ year_1871 +year_1872
+            +    lnland_ft_n_1867_1869   + lnland_ft_blk_1867_1869  +  lnland_ft_n_1867_1871 
+            + lnland_ft_blk_1867_1871   +   lnland_ft_n_1867_1872  + lnland_ft_blk_1867_1872 
+            , data=rdf7)  
+summary(reg04)
+reg05 <- lm(lnvalue_land_ft  ~   burned_1869  + burned_1871+ burned_1872+ year_1871 +year_1872
+            +    lnland_ft_n_1867_1869   + lnland_ft_blk_1867_1869  +  lnland_ft_n_1867_1871 
+            + lnland_ft_blk_1867_1871   +   lnland_ft_n_1867_1872  + lnland_ft_blk_1867_1872 
+            , data=rdf6)  
+summary(reg05)
+reg06 <- lm(lnvalue_land_ft  ~   burned_1869  + burned_1871+ burned_1872+ year_1871 +year_1872
+            +    lnland_ft_n_1867_1869   + lnland_ft_blk_1867_1869  +  lnland_ft_n_1867_1871 
+            + lnland_ft_blk_1867_1871   +   lnland_ft_n_1867_1872  + lnland_ft_blk_1867_1872 
+            , data=rdf5)  
+summary(reg06)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg07 <- lm(lnvalue_land_ft  ~   burned_1871+ burned_1872 +year_1872
+            +     lnland_ft_n_1869_1872    +  lnland_ft_n_1867_1872  +  lnland_ft_blk_1869_1872
+            + lnland_ft_blk_1867_1872    +    lnland_ft_n_1869_1871  +  lnland_ft_n_1867_1871 
+            +lnland_ft_blk_1869_1871+lnland_ft_blk_1867_1871 , data=rdf10)  
+summary(reg07)
+reg08 <- lm(lnvalue_land_ft  ~   burned_1871+ burned_1872 +year_1872
+            +     lnland_ft_n_1869_1872    +  lnland_ft_n_1867_1872  +  lnland_ft_blk_1869_1872
+            + lnland_ft_blk_1867_1872    +    lnland_ft_n_1869_1871  +  lnland_ft_n_1867_1871 
+            +lnland_ft_blk_1869_1871+lnland_ft_blk_1867_1871 , data=rdf9)  
+summary(reg08)
+reg09 <- lm(lnvalue_land_ft  ~   burned_1871+ burned_1872 +year_1872
+            +     lnland_ft_n_1869_1872    +  lnland_ft_n_1867_1872  +  lnland_ft_blk_1869_1872
+            + lnland_ft_blk_1867_1872    +    lnland_ft_n_1869_1871  +  lnland_ft_n_1867_1871 
+            +lnland_ft_blk_1869_1871+lnland_ft_blk_1867_1871 , data=rdf8)  
+summary(reg09)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg010 <- lm(lnvalue_land_ft  ~ burned_1872 + lnland_ft_n_1871_1872    +  lnland_ft_n_1869_1872   +   lnland_ft_n_1867_1872 
+             + lnland_ft_blk_1871_1872    +    lnland_ft_blk_1869_1872   +  lnland_ft_blk_1867_1872  
+             , data=rdf13)  
+summary(reg010)
+reg011 <- lm(lnvalue_land_ft  ~ burned_1872 + lnland_ft_n_1871_1872    +  lnland_ft_n_1869_1872   +   lnland_ft_n_1867_1872 
+             + lnland_ft_blk_1871_1872    +    lnland_ft_blk_1869_1872   +  lnland_ft_blk_1867_1872  
+             , data=rdf12)  
+summary(reg011)
+reg012 <- lm(lnvalue_land_ft  ~ burned_1872 + lnland_ft_n_1871_1872    +  lnland_ft_n_1869_1872   +   lnland_ft_n_1867_1872 
+             + lnland_ft_blk_1871_1872  +   lnland_ft_blk_1869_1872   +  lnland_ft_blk_1867_1872  
+             , data=rdf11)  
+summary(reg012)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> building_ft    >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg001 <- lm(lnvalue_building_ft  ~    burned_1867  + burned_1869+ burned_1871+burned_1872+year_1869+ year_1871 +year_1872, data=rdf4) 
+summary(reg001)
+reg002 <- lm(lnvalue_building_ft  ~    burned_1867  + burned_1869+ burned_1871+burned_1872+year_1869+ year_1871 +year_1872, data=rdf3) 
+summary(reg002)
+reg003 <- lm(lnvalue_building_ft  ~    burned_1867  + burned_1869+ burned_1871+burned_1872+year_1869+ year_1871 +year_1872, data=rdf2) 
+summary(reg003)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  building_ft >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg004 <- lm(lnvalue_building_ft  ~   burned_1869  + burned_1871+ burned_1872+ year_1871 +year_1872
+            +lnbuilding_ft_n_1867_1869+lnbuilding_ft_blk_1867_1869  +  lnbuilding_ft_n_1867_1871 
+            + lnbuilding_ft_blk_1867_1871   +   lnbuilding_ft_n_1867_1872  + lnbuilding_ft_blk_1867_1872 
+            , data=rdf7)  
+summary(reg004)
+reg005 <- lm(lnvalue_building_ft  ~   burned_1869  + burned_1871+ burned_1872+ year_1871 +year_1872
+             +lnbuilding_ft_n_1867_1869+lnbuilding_ft_blk_1867_1869  +  lnbuilding_ft_n_1867_1871 
+             + lnbuilding_ft_blk_1867_1871   +   lnbuilding_ft_n_1867_1872  + lnbuilding_ft_blk_1867_1872 
+             , data=rdf6)  
+summary(reg005)
+reg006 <- lm(lnvalue_building_ft  ~   burned_1869  + burned_1871+ burned_1872+ year_1871 +year_1872
+             +lnbuilding_ft_n_1867_1869+lnbuilding_ft_blk_1867_1869  +  lnbuilding_ft_n_1867_1871 
+             + lnbuilding_ft_blk_1867_1871   +   lnbuilding_ft_n_1867_1872  + lnbuilding_ft_blk_1867_1872 
+             , data=rdf5) 
+summary(reg006)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg007 <- lm(lnvalue_building_ft  ~   burned_1871+ burned_1872 +year_1872
+            +     lnbuilding_ft_n_1869_1872    +  lnbuilding_ft_n_1867_1872  +  lnbuilding_ft_blk_1869_1872
+            + lnbuilding_ft_blk_1867_1872    +    lnbuilding_ft_n_1869_1871  +  lnbuilding_ft_n_1867_1871 
+            +lnbuilding_ft_blk_1869_1871+lnbuilding_ft_blk_1867_1871 , data=rdf10)  
+summary(reg007)
+reg008 <- lm(lnvalue_building_ft  ~   burned_1871+ burned_1872 +year_1872
+             +     lnbuilding_ft_n_1869_1872    +  lnbuilding_ft_n_1867_1872  +  lnbuilding_ft_blk_1869_1872
+             + lnbuilding_ft_blk_1867_1872    +    lnbuilding_ft_n_1869_1871  +  lnbuilding_ft_n_1867_1871 
+             +lnbuilding_ft_blk_1869_1871+lnbuilding_ft_blk_1867_1871 , data=rdf9)   
+summary(reg008)
+reg009 <- lm(lnvalue_building_ft  ~   burned_1871+ burned_1872 +year_1872
+             +     lnbuilding_ft_n_1869_1872    +  lnbuilding_ft_n_1867_1872  +  lnbuilding_ft_blk_1869_1872
+             + lnbuilding_ft_blk_1867_1872    +    lnbuilding_ft_n_1869_1871  +  lnbuilding_ft_n_1867_1871 
+             +lnbuilding_ft_blk_1869_1871+lnbuilding_ft_blk_1867_1871 , data=rdf8)   
+summary(reg009)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg0010 <- lm(lnvalue_building_ft  ~ burned_1872 + lnbuilding_ft_n_1871_1872    +  lnbuilding_ft_n_1869_1872   +   lnbuilding_ft_n_1867_1872 
+             + lnbuilding_ft_blk_1871_1872    +    lnbuilding_ft_blk_1869_1872   +  lnbuilding_ft_blk_1867_1872  
+             , data=rdf13)  
+summary(reg0010)
+reg0011 <- lm(lnvalue_building_ft  ~ burned_1872 + lnbuilding_ft_n_1871_1872    +  lnbuilding_ft_n_1869_1872   +   lnbuilding_ft_n_1867_1872 
+             + lnbuilding_ft_blk_1871_1872    +    lnbuilding_ft_blk_1869_1872   +  lnbuilding_ft_blk_1867_1872  
+             , data=rdf12)  
+summary(reg0011)
+reg0012 <- lm(lnvalue_building_ft  ~ burned_1872 + lnbuilding_ft_n_1871_1872    +  lnbuilding_ft_n_1869_1872   +   lnbuilding_ft_n_1867_1872 
+             + lnbuilding_ft_blk_1871_1872    +    lnbuilding_ft_blk_1869_1872   +  lnbuilding_ft_blk_1867_1872  
+             , data=rdf11)   
+summary(reg0012)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+#remaining columns
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> land_ft    >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg1 <- lm(lnvalue_land_ft  ~    burned_1867  + burned_1869+burned_1872+year_1869 +year_1872, data=rdf4) 
+summary(reg1)
+reg2 <- lm(lnvalue_land_ft  ~    burned_1867  + burned_1869+burned_1872+year_1869+year_1872, data=rdf3) 
+summary(reg2)
+reg3 <- lm(lnvalue_land_ft  ~    burned_1867  + burned_1869+burned_1872+year_1869 +year_1872, data=rdf2) 
+summary(reg3)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  land_ft >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> building_ft    >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg11 <- lm(lnvalue_building_ft  ~    burned_1867  + burned_1869+burned_1872+year_1869 +year_1872, data=rdf4) 
+summary(reg11)
+reg22 <- lm(lnvalue_building_ft  ~    burned_1867  + burned_1869+burned_1872+year_1869 +year_1872, data=rdf3) 
+summary(reg22)
+reg33 <- lm(lnvalue_building_ft  ~    burned_1867  + burned_1869+burned_1872+year_1869+year_1872, data=rdf2) 
+summary(reg33)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  building_ft >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg4 <- lm(lnvalue_land_ft  ~   burned_1869  + burned_1872+ year_1869 +year_1872
+            +    lnland_ft_n_1867_1869   + lnland_ft_blk_1867_1869  +  lnland_ft_n_1867_1871 
+            + lnland_ft_blk_1867_1871   +   lnland_ft_n_1867_1872  + lnland_ft_blk_1867_1872 
+            , data=rdf7)  
+summary(reg4)
+reg5 <- lm(lnvalue_land_ft  ~   burned_1869  + burned_1872+ year_1869  +year_1872
+            +    lnland_ft_n_1867_1869   + lnland_ft_blk_1867_1869  +  lnland_ft_n_1867_1871 
+            + lnland_ft_blk_1867_1871   +   lnland_ft_n_1867_1872  + lnland_ft_blk_1867_1872 
+            , data=rdf6)  
+summary(reg5)
+reg6 <- lm(lnvalue_land_ft  ~   burned_1869  + burned_1872+ year_1869  +year_1872
+            +    lnland_ft_n_1867_1869   + lnland_ft_blk_1867_1869  +  lnland_ft_n_1867_1871 
+            + lnland_ft_blk_1867_1871   +   lnland_ft_n_1867_1872  + lnland_ft_blk_1867_1872 
+            , data=rdf5)  
+summary(reg6)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg44 <- lm(lnvalue_building_ft  ~   burned_1869  + burned_1872+ year_1869  +year_1872
+             +lnbuilding_ft_n_1867_1869+lnbuilding_ft_blk_1867_1869  +  lnbuilding_ft_n_1867_1871 
+             + lnbuilding_ft_blk_1867_1871   +   lnbuilding_ft_n_1867_1872  + lnbuilding_ft_blk_1867_1872 
+             , data=rdf7)  
+summary(reg44)
+reg55 <- lm(lnvalue_building_ft  ~   burned_1869  + burned_1872+ year_1869  +year_1872
+             +lnbuilding_ft_n_1867_1869+lnbuilding_ft_blk_1867_1869  +  lnbuilding_ft_n_1867_1871 
+             + lnbuilding_ft_blk_1867_1871   +   lnbuilding_ft_n_1867_1872  + lnbuilding_ft_blk_1867_1872 
+             , data=rdf6)  
+summary(reg55)
+reg66 <- lm(lnvalue_building_ft  ~   burned_1869  + burned_1872+ year_1869  +year_1872
+             +lnbuilding_ft_n_1867_1869+lnbuilding_ft_blk_1867_1869  +  lnbuilding_ft_n_1867_1871 
+             + lnbuilding_ft_blk_1867_1871   +   lnbuilding_ft_n_1867_1872  + lnbuilding_ft_blk_1867_1872 
+             , data=rdf5) 
+summary(reg66)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg77 <- lm(lnvalue_land_ft  ~   burned_1872 +year_1872
+            +     lnland_ft_n_1869_1872  +  lnland_ft_blk_1869_1872  +  lnland_ft_n_1867_1872  
+            + lnland_ft_blk_1867_1872    +    lnland_ft_n_1869_1871  +  lnland_ft_n_1867_1871 
+            +lnland_ft_blk_1869_1871+lnland_ft_blk_1867_1871 , data=rdf10)  
+summary(reg77)
+reg88 <- lm(lnvalue_land_ft  ~    burned_1872 +year_1872
+            +     lnland_ft_n_1869_1872    +  lnland_ft_n_1867_1872  +  lnland_ft_blk_1869_1872
+            + lnland_ft_blk_1867_1872    +    lnland_ft_n_1869_1871  +  lnland_ft_n_1867_1871 
+            +lnland_ft_blk_1869_1871+lnland_ft_blk_1867_1871 , data=rdf9)  
+summary(reg88)
+reg99 <- lm(lnvalue_land_ft  ~    burned_1872 +year_1872
+            +     lnland_ft_n_1869_1872    +  lnland_ft_n_1867_1872  +  lnland_ft_blk_1869_1872
+            + lnland_ft_blk_1867_1872    +    lnland_ft_n_1869_1871  +  lnland_ft_n_1867_1871 
+            +lnland_ft_blk_1869_1871+lnland_ft_blk_1867_1871 , data=rdf8)  
+summary(reg99)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>land_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+reg077 <- lm(lnvalue_building_ft  ~    burned_1872 +year_1872
+             +     lnbuilding_ft_n_1869_1872    +  lnbuilding_ft_n_1867_1872  +  lnbuilding_ft_blk_1869_1872
+             + lnbuilding_ft_blk_1867_1872    +    lnbuilding_ft_n_1869_1871  +  lnbuilding_ft_n_1867_1871 
+             +lnbuilding_ft_blk_1869_1871+lnbuilding_ft_blk_1867_1871 , data=rdf10)  
+summary(reg077)
+reg088 <- lm(lnvalue_building_ft  ~    burned_1872 +year_1872
+             +     lnbuilding_ft_n_1869_1872    +  lnbuilding_ft_n_1867_1872  +  lnbuilding_ft_blk_1869_1872
+             + lnbuilding_ft_blk_1867_1872    +    lnbuilding_ft_n_1869_1871  +  lnbuilding_ft_n_1867_1871 
+             +lnbuilding_ft_blk_1869_1871+lnbuilding_ft_blk_1867_1871 , data=rdf9)   
+summary(reg088)
+reg099 <- lm(lnvalue_building_ft  ~   burned_1872 +year_1872
+             +     lnbuilding_ft_n_1869_1872    +  lnbuilding_ft_n_1867_1872  +  lnbuilding_ft_blk_1869_1872
+             + lnbuilding_ft_blk_1867_1872    +    lnbuilding_ft_n_1869_1871  +  lnbuilding_ft_n_1867_1871 
+             +lnbuilding_ft_blk_1869_1871+lnbuilding_ft_blk_1867_1871 , data=rdf8)   
+summary(reg099)
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>building_ft>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+table_1<-stargazer(reg01,reg1,reg010,reg02,reg2,reg011,reg03,reg3,reg012, float=T,header = F, no.space= T,align = T, single.row = F, t.auto = F,
+                   p.auto = F, star.cutoffs = NA, column.sep.width = "-15pt", omit.stat = c("f", "ser","rsq"),omit = c("Constant", "Subject","year_1869","year_1871","year_1872","lnland_ft_n_1871_1872",
+                                                                                                                       "lnland_ft_n_1867_1872","lnland_ft_blk_1871_1872",
+                                                                                                                       "lnland_ft_blk_1869_1872","lnland_ft_blk_1867_1872","lnland_ft_n_1869_1872"),
+                   covariate.labels = c("1867 X burned", "1869 X burned", "1871 X burned","1872 x burned"),
+                   font.size = "small",keep.stat = "n",omit.table.layout = "n",column.labels = c("", "Full Sample", "","", "Close Sample", "","", "Distant Sample", ""),
+                   type = "text", title = "Table 1- PreFire Differences Between The Burned Area And Unburned Area",
+                   dep.var.labels=c("Total House Value"), digits=1, out="table.text")
+
+table_2<-stargazer(reg001,reg11,reg0010,reg002,reg22,reg0011,reg003,reg33,reg0012,header = F, no.space= T,align = T, single.row = F, t.auto = F,
+                   p.auto = F, column.sep.width = "-15pt", omit.stat = c("f","ser","rsq"),omit = c("Constant", "Subject","year_1869","year_1871","year_1872","lnbuilding_ft_n_1871_1872",
+                                                                                                   "lnbuilding_ft_n_1869_1872","lnbuilding_ft_blk_1871_1872","lnbuilding_ft_n_1867_1872","lnbuilding_ft_blk_1869_1872","lnbuilding_ft_blk_1867_1872"),
+                   covariate.labels = c("1867 x burned", "1869 X burned", "1871 X burned","1872 x burned"),
+                   font.size = "small",keep.stat = "n",omit.table.layout = "n",column.labels = c("", "Full Sample", "","", "Close Sample", "","", "Distant Sample", ""),
+                   type = "text",add.lines = list(c("Year Fixed effects", "X", "X", "X", "X", "X", "X", "X", "X", "X"),c("Burned region", "", "X", "X", "", "X", "X", "", "X", "X"), 
+                                                  c("year FE Xpre-1872 values", "", "", "X", "", "", "X", "", "", "X")),star.cutoffs = NA, dep.var.labels=c("Log value of building per square foot"), digits=1, out="table.text")
+
+
+
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
